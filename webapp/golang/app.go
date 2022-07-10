@@ -63,7 +63,7 @@ type Comment struct {
 	UserID    int       `db:"user_id"`
 	Comment   string    `db:"comment"`
 	CreatedAt time.Time `db:"created_at"`
-	User      User
+	User      User      `db:"user"`
 }
 
 func init() {
@@ -173,7 +173,23 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 			return nil, err
 		}
 
-		query := "SELECT * FROM `comments` WHERE `post_id` = ? ORDER BY `created_at` DESC"
+		query := "" +
+			" SELECT " +
+			"   comments.id, " +
+			"   comments.post_id, " +
+			"   comments.user_id, " +
+			"   comments.comment, " +
+			"   comments.created_at, " +
+			"   users.id as `user.id`, " +
+			"   users.account_name as `user.account_name`, " +
+			"   users.passhash as `user.passhash`, " +
+			"   users.authority as `user.authority`, " +
+			"   users.del_flg as `user.del_flg`," +
+			"   users.created_at as `user.created_at`" +
+			" FROM comments " +
+			"   INNER JOIN users ON comments.user_id = users.id" +
+			" WHERE comments.post_id = ?" +
+			" ORDER BY comments.created_at ASC"
 		if !allComments {
 			query += " LIMIT 3"
 		}
@@ -183,24 +199,7 @@ func makePosts(results []Post, csrfToken string, allComments bool) ([]Post, erro
 			return nil, err
 		}
 
-		for i := 0; i < len(comments); i++ {
-			err := db.Get(&comments[i].User, "SELECT * FROM `users` WHERE `id` = ?", comments[i].UserID)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		// reverse
-		for i, j := 0, len(comments)-1; i < j; i, j = i+1, j-1 {
-			comments[i], comments[j] = comments[j], comments[i]
-		}
-
 		p.Comments = comments
-
-		err = db.Get(&p.User, "SELECT * FROM `users` WHERE `id` = ?", p.UserID)
-		if err != nil {
-			return nil, err
-		}
 
 		p.CSRFToken = csrfToken
 
