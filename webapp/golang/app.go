@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bradfitz/gomemcache/memcache"
 	gsm "github.com/bradleypeabody/gorilla-sessions-memcache"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/go-sql-driver/mysql"
@@ -25,7 +26,7 @@ import (
 
 var (
 	db    *sqlx.DB
-	store *gsm.DumbMemoryStore
+	store *gsm.MemcacheStore
 )
 
 const (
@@ -70,7 +71,8 @@ func init() {
 	if memdAddr == "" {
 		memdAddr = "localhost:11211"
 	}
-	store = gsm.NewDumbMemorySessionStore()
+	memcacheClient := memcache.New(memdAddr)
+	store = gsm.NewMemcacheStore(memcacheClient, "iscogram_", []byte("sendagaya"))
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
