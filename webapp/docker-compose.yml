@@ -37,6 +37,7 @@ services:
       - "TZ=Asia/Tokyo"
       - "MYSQL_ROOT_HOST=%"
       - "MYSQL_ROOT_PASSWORD=root"
+      - "MYSQL_DATABASE=isuconp"
     volumes:
       - mysql:/var/lib/mysql
       - ./etc/my.cnf:/etc/my.cnf
