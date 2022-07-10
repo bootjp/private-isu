@@ -67,7 +67,16 @@ type Comment struct {
 }
 
 func init() {
-	memdAddr := "/var/run/memcached/memcached.sock"
+	var memdAddr string
+	if os.Getenv("ENV") != "local" {
+		memdAddr = "/var/run/memcached/memcached.sock"
+	} else {
+		memdAddr = os.Getenv("ISUCONP_MEMCACHED_ADDRESS")
+		if memdAddr == "" {
+			memdAddr = "localhost:11211"
+		}
+		memdAddr = "localhost:11211"
+	}
 	memcacheClient := memcache.New(memdAddr)
 	store = gsm.NewMemcacheStore(memcacheClient, "iscogram_", []byte("sendagaya"))
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -803,13 +812,25 @@ func main() {
 		dbname = "isuconp"
 	}
 
-	dsn := fmt.Sprintf(
-		"%s:%s@unix(%s)/%s?charset=utf8mb4&parseTime=true&loc=Local",
-		user,
-		password,
-		"/var/run/mysqld/mysqld.sock",
-		dbname,
-	)
+	var dsn string
+	if os.Getenv("ENV") != "local" {
+		dsn = fmt.Sprintf(
+			"%s:%s@unix(%s)/%s?charset=utf8mb4&parseTime=true&loc=Local",
+			user,
+			password,
+			"/var/run/mysqld/mysqld.sock",
+			dbname,
+		)
+	} else {
+		dsn = fmt.Sprintf(
+			"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=Local",
+			user,
+			password,
+			host,
+			port,
+			dbname,
+		)
+	}
 
 	db, err = sqlx.Open("mysql", dsn)
 	if err != nil {
