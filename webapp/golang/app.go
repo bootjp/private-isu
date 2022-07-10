@@ -67,7 +67,7 @@ type Comment struct {
 }
 
 func init() {
-	memdAddr := "unix:///var/run/memcached/memcached.sock"
+	memdAddr := "/var/run/memcached/memcached.sock"
 	memcacheClient := memcache.New(memdAddr)
 	store = gsm.NewMemcacheStore(memcacheClient, "iscogram_", []byte("sendagaya"))
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
